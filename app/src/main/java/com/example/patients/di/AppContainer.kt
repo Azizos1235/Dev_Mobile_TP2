@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit
 private const val BASE_URL = "http://10.193.83.2:5000/api/"
 
 class AppContainer {
-
     // Ignore les champs JSON absents de nos classes (createdAt, updatedAt...)
     private val json = Json { ignoreUnknownKeys = true }
 
