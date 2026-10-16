@@ -3,6 +3,7 @@ package com.example.patients.data.repository
 import com.example.patients.data.model.ApiError
 import com.example.patients.data.model.Consultation
 import com.example.patients.data.remote.ConsultationApi
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import retrofit2.HttpException
@@ -13,12 +14,14 @@ class ConsultationRepository(
     private val json: Json
 ) {
 
-    suspend fun getConsultations(patientId: String? = null): Result<List<Consultation>> =
+    suspend fun getConsultations(patientId: String): Result<List<Consultation>> =
         safeCall { api.getConsultations(patientId) }
 
     private suspend fun <T> safeCall(call: suspend () -> T): Result<T> =
         try {
             Result.success(call())
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: HttpException) {
             Result.failure(Exception(messageFrom(e)))
         } catch (e: IOException) {

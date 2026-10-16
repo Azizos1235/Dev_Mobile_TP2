@@ -28,12 +28,25 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun PatientsApp() {
-    var showConsultations by rememberSaveable { mutableStateOf(false) }
+    // Patient whose consultations are shown; null means the patient list is displayed.
+    var consultationsPatientId by rememberSaveable { mutableStateOf<String?>(null) }
+    var consultationsPatientName by rememberSaveable { mutableStateOf("") }
 
-    if (showConsultations) {
-        BackHandler { showConsultations = false }
-        ConsultationsScreen(onBack = { showConsultations = false })
+    val patientId = consultationsPatientId
+
+    if (patientId != null) {
+        BackHandler { consultationsPatientId = null }
+        ConsultationsScreen(
+            patientId = patientId,
+            patientName = consultationsPatientName,
+            onBack = { consultationsPatientId = null }
+        )
     } else {
-        PatientsScreen(onShowConsultations = { showConsultations = true })
+        PatientsScreen(
+            onShowConsultations = { patient ->
+                consultationsPatientName = patient.nom
+                consultationsPatientId = patient.id
+            }
+        )
     }
 }

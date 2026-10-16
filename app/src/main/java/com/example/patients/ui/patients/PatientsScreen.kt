@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
@@ -55,7 +56,7 @@ import com.example.patients.ui.PatientViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PatientsScreen(
-    onShowConsultations: () -> Unit,
+    onShowConsultations: (Patient) -> Unit,
     viewModel: PatientViewModel = viewModel(factory = PatientViewModel.Factory)
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,16 +79,6 @@ fun PatientsScreen(
                     }
                 }
             )
-        },
-        bottomBar = {
-            Button(
-                onClick = onShowConsultations,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp)
-            ) {
-                Text("Voir toutes les consultations")
-            }
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
@@ -126,6 +117,7 @@ fun PatientsScreen(
                         PatientList(
                             patients = state.patients,
                             onEdit = { patientToEdit = it },
+                            onConsultations = onShowConsultations,
                             onDelete = { viewModel.deletePatient(it) }
                         )
                 }
@@ -187,6 +179,7 @@ fun StatutFilterRow(
 fun PatientList(
     patients: List<Patient>,
     onEdit: (Patient) -> Unit,
+    onConsultations: (Patient) -> Unit,
     onDelete: (Patient) -> Unit
 ) {
     if (patients.isEmpty()) {
@@ -200,6 +193,7 @@ fun PatientList(
                 PatientCard(
                     patient = patient,
                     onClick = { onEdit(patient) },
+                    onConsultations = { onConsultations(patient) },
                     onDelete = { onDelete(patient) }
                 )
             }
@@ -230,6 +224,7 @@ fun ErrorContent(
 fun PatientCard(
     patient: Patient,
     onClick: () -> Unit,
+    onConsultations: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -253,6 +248,9 @@ fun PatientCard(
                     ).joinToString(" · "),
                     style = MaterialTheme.typography.bodyMedium
                 )
+            }
+            IconButton(onClick = onConsultations) {
+                Icon(Icons.Default.DateRange, contentDescription = "Consultations")
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Supprimer")

@@ -37,20 +37,25 @@ import com.example.patients.data.model.Consultation
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConsultationsScreen(
+    patientId: String,
+    patientName: String,
     onBack: () -> Unit,
-    viewModel: ConsultationsViewModel = viewModel(factory = ConsultationsViewModel.Factory)
+    viewModel: ConsultationsViewModel = viewModel(
+        key = "consultations-$patientId",
+        factory = ConsultationsViewModel.factory(patientId)
+    )
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Consultations") },
+                title = { Text("Consultations · $patientName") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Retour aux patients"
+                            contentDescription = "Retour"
                         )
                     }
                 },
@@ -95,13 +100,20 @@ fun ConsultationsScreen(
 @Composable
 fun ConsultationList(consultations: List<Consultation>) {
     if (consultations.isEmpty()) {
-        Text("Aucune consultation", modifier = Modifier.padding(24.dp))
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                "Aucune consultation pour ce patient",
+                modifier = Modifier.padding(24.dp),
+                textAlign = TextAlign.Center
+            )
+        }
     } else {
         LazyColumn(
+            modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(consultations, key = { consultation -> consultation.id }) { consultation ->
+            items(consultations, key = { c -> c.id }) { consultation ->
                 ConsultationCard(consultation)
             }
         }
@@ -122,11 +134,11 @@ fun ConsultationCard(consultation: Consultation) {
                     .joinToString(" · "),
                 style = MaterialTheme.typography.bodySmall
             )
-            consultation.traitement?.let { traitement ->
-                Text("Traitement : $traitement", style = MaterialTheme.typography.bodySmall)
+            consultation.traitement?.let { t ->
+                Text("Traitement : $t", style = MaterialTheme.typography.bodySmall)
             }
-            consultation.notes?.let { notes ->
-                Text(notes, style = MaterialTheme.typography.bodySmall)
+            consultation.notes?.let { n ->
+                Text(n, style = MaterialTheme.typography.bodySmall)
             }
         }
     }

@@ -10,6 +10,7 @@ import com.example.patients.data.model.Patient
 import com.example.patients.data.model.PatientRequest
 import com.example.patients.data.repository.PatientRepository
 import com.example.patients.ui.patients.PatientsUiState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -34,6 +35,8 @@ class PatientViewModel(
     private val _messages = MutableSharedFlow<String>()
     val messages: SharedFlow<String> = _messages.asSharedFlow()
 
+    private var loadJob: Job? = null
+
     init {
         loadPatients()
     }
@@ -44,9 +47,10 @@ class PatientViewModel(
     }
 
     fun loadPatients() {
+        loadJob?.cancel()
         _uiState.value = PatientsUiState.Loading
 
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             repository.getPatients(_statut.value)
                 .onSuccess { patients ->
                     _uiState.value = PatientsUiState.Success(patients)
@@ -56,17 +60,6 @@ class PatientViewModel(
                         e.message ?: "Erreur inconnue"
                     )
                 }
-        }
-    }
-
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]
-                        as PatientsApplication
-
-                PatientViewModel(app.container.patientRepository)
-            }
         }
     }
 
@@ -103,20 +96,25 @@ class PatientViewModel(
         viewModelScope.launch {
             repository.updatePatient(id, request)
                 .onSuccess { patient ->
-                    _uiState.update { state ->
-                        if (state is PatientsUiState.Success) {
-                            state.copy(
-                                patients = state.patients.map {
-                                    if (it.id == patient.id) patient else it
-                                }
-                            )
-                        } else state
+                    updateList { list ->
+                        list.map { if (it.id == patient.id) patient else it }
                     }
                     _messages.emit("Patient modifié")
                 }
                 .onFailure { e ->
                     _messages.emit("Erreur lors de la modification : ${e.message}")
                 }
+        }
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY]
+                        as PatientsApplication
+
+                PatientViewModel(app.container.patientRepository)
+            }
         }
     }
 }

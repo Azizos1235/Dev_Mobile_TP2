@@ -6,5 +6,5 @@ import retrofit2.http.Query
 
 interface ConsultationApi {
     @GET("consultations")
-    suspend fun getConsultations(@Query("patient") patientId: String? = null): List<Consultation>
+    suspend fun getConsultations(@Query("patient") patientId: String): List<Consultation>
 }
