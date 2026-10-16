@@ -1,0 +1,10 @@
+package com.example.patients.data.remote
+
+import com.example.patients.data.model.Consultation
+import retrofit2.http.GET
+import retrofit2.http.Query
+
+interface ConsultationApi {
+    @GET("consultations")
+    suspend fun getConsultations(@Query("patient") patientId: String? = null): List<Consultation>
+}

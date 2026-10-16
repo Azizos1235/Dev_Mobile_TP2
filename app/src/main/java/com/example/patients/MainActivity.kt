@@ -2,12 +2,15 @@ package com.example.patients
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.example.patients.ui.consultations.ConsultationsScreen
 import com.example.patients.ui.patients.PatientsScreen
 import com.example.patients.ui.theme.PatientsTheme
 
@@ -17,25 +20,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PatientsTheme {
-                PatientsScreen()
+                PatientsApp()
             }
         }
     }
-
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+fun PatientsApp() {
+    var showConsultations by rememberSaveable { mutableStateOf(false) }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    PatientsTheme {
-        Greeting("Android")
+    if (showConsultations) {
+        BackHandler { showConsultations = false }
+        ConsultationsScreen(onBack = { showConsultations = false })
+    } else {
+        PatientsScreen(onShowConsultations = { showConsultations = true })
     }
 }

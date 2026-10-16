@@ -1,6 +1,8 @@
 package com.example.patients.di
 
+import com.example.patients.data.remote.ConsultationApi
 import com.example.patients.data.remote.PatientApi
+import com.example.patients.data.repository.ConsultationRepository
 import com.example.patients.data.repository.PatientRepository
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -13,10 +15,8 @@ import java.util.concurrent.TimeUnit
 private const val BASE_URL = "http://10.193.83.2:5000/api/"
 
 class AppContainer {
-    // Ignore les champs JSON absents de nos classes (createdAt, updatedAt...)
     private val json = Json { ignoreUnknownKeys = true }
 
-    // Affiche chaque requête et réponse dans Logcat (filtre : okhttp)
     private val okHttpClient = OkHttpClient.Builder()
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
@@ -31,6 +31,8 @@ class AppContainer {
         .build()
 
     private val patientApi: PatientApi = retrofit.create(PatientApi::class.java)
+    private val consultationApi: ConsultationApi = retrofit.create(ConsultationApi::class.java)
 
     val patientRepository = PatientRepository(patientApi, json)
+    val consultationRepository = ConsultationRepository(consultationApi, json)
 }

@@ -15,8 +15,8 @@ class PatientRepository(
     private val json: Json
 ) {
 
-    suspend fun getPatients(): Result<List<Patient>> =
-        safeCall { api.getPatients() }
+    suspend fun getPatients(statut: String? = null): Result<List<Patient>> =
+        safeCall { api.getPatients(statut) }
 
     private suspend fun <T> safeCall(
         call: suspend () -> T
@@ -56,6 +56,10 @@ class PatientRepository(
         safeCall { api.createPatient(request)
         }
 
+
+    suspend fun updatePatient(id: String, request: PatientRequest): Result<Patient> = safeCall {
+        api.updatePatient(id, request)
+    }
     suspend fun deletePatient(id: String): Result<Unit> = safeCall {
         val response = api.deletePatient(id)
         if (!response.isSuccessful) throw HttpException(response)

@@ -1,4 +1,3 @@
-
 package com.example.patients.ui
 
 import androidx.lifecycle.ViewModel
@@ -26,10 +25,21 @@ class PatientViewModel(
 
     private val _uiState =
         MutableStateFlow<PatientsUiState>(PatientsUiState.Loading)
-
     val uiState: StateFlow<PatientsUiState> = _uiState.asStateFlow()
 
+    // Filtre courant : null = "Tous"
+    private val _statut = MutableStateFlow<String?>(null)
+    val statut: StateFlow<String?> = _statut.asStateFlow()
+
+    private val _messages = MutableSharedFlow<String>()
+    val messages: SharedFlow<String> = _messages.asSharedFlow()
+
     init {
+        loadPatients()
+    }
+
+    fun setStatut(value: String?) {
+        _statut.value = value
         loadPatients()
     }
 
@@ -37,7 +47,7 @@ class PatientViewModel(
         _uiState.value = PatientsUiState.Loading
 
         viewModelScope.launch {
-            repository.getPatients()
+            repository.getPatients(_statut.value)
                 .onSuccess { patients ->
                     _uiState.value = PatientsUiState.Success(patients)
                 }
@@ -60,11 +70,6 @@ class PatientViewModel(
         }
     }
 
-    private val _messages = MutableSharedFlow<String>()
-    val messages: SharedFlow<String> = _messages.
-    asSharedFlow()
-
-
     fun addPatient(request: PatientRequest) {
         viewModelScope.launch {
             repository.createPatient(request)
@@ -75,7 +80,6 @@ class PatientViewModel(
                 .onFailure { e -> _messages.emit(e.message ?: "Ajout impossible") }
         }
     }
-
 
     private fun updateList(transform: (List<Patient>) -> List<Patient>) {
         _uiState.update { state ->
@@ -95,4 +99,24 @@ class PatientViewModel(
         }
     }
 
+    fun updatePatient(id: String, request: PatientRequest) {
+        viewModelScope.launch {
+            repository.updatePatient(id, request)
+                .onSuccess { patient ->
+                    _uiState.update { state ->
+                        if (state is PatientsUiState.Success) {
+                            state.copy(
+                                patients = state.patients.map {
+                                    if (it.id == patient.id) patient else it
+                                }
+                            )
+                        } else state
+                    }
+                    _messages.emit("Patient modifié")
+                }
+                .onFailure { e ->
+                    _messages.emit("Erreur lors de la modification : ${e.message}")
+                }
+        }
+    }
 }
